@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Legal Aid AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary: #4361EE;
+            --primary-hover: #3451D1;
+            --primary-glow: rgba(67, 97, 238, 0.25);
+            --accent: #7C3AED;
+            --bg-dark: #090E1A;
+            --bg-panel: rgba(13, 19, 36, 0.97);
+            --bg-sidebar: rgba(8, 13, 26, 0.98);
+            --border: rgba(255, 255, 255, 0.07);
+            --text: #E8EEFF;
+            --text-muted: #6B7FA8;
+            --text-dim: #3B4A6B;
+            --bot-bubble: #0D1526;
+            --sidebar-w: 270px;
+        }
+
+        *, *::before, *::after {
+            margin: 0; padding: 0; box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Sora', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image:
+                radial-gradient(ellipse 80% 60% at 20% 0%, rgba(67, 97, 238, 0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 100%, rgba(124, 58, 237, 0.1) 0%, transparent 60%);
+        }
+
+        /* ── HERO ── */
+        .hero {
+            position: fixed; inset: 0; z-index: 100;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; padding: 24px;
+            background: var(--bg-dark);
+            background-image: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(67, 97, 238, 0.15) 0%, transparent 60%);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .hero.hidden { opacity: 0; transform: scale(0.97); pointer-events: none; }
+
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(67, 97, 238, 0.12); border: 1px solid rgba(67, 97, 238, 0.3);
+            padding: 6px 18px; border-radius: 50px; font-size: 0.75rem; font-weight: 600;
+            color: #818CF8; letter-spacing: 0.08em; text-transform: uppercase;
+            margin-bottom: 32px; animation: fadeUp 0.6s ease both;
+        }
+
+        .hero-icon-ring {
+            position: relative; width: 110px; height: 110px; margin-bottom: 32px;
+            animation: fadeUp 0.6s 0.1s ease both;
+        }
+        .hero-icon-ring::before {
+            content: ''; position: absolute; inset: -10px; border-radius: 50%;
+            border: 1px solid rgba(67, 97, 238, 0.3); animation: spin 8s linear infinite;
+        }
+        .hero-icon-ring::after {
+            content: ''; position: absolute; inset: -22px; border-radius: 50%;
+            border: 1px dashed rgba(67, 97, 238, 0.15); animation: spin 14s linear infinite reverse;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .hero-icon-inner {
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, #1a2340, #0F172A);
+            border: 1px solid rgba(67, 97, 238, 0.45); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.6rem; color: #818CF8; box-shadow: 0 0 50px rgba(67, 97, 238, 0.3);
+        }
+
+        .hero h1 {
+            font-size: clamp(2.4rem, 6vw, 4rem); font-weight: 700; margin-bottom: 16px;
+            background: linear-gradient(135deg, #E8EEFF 30%, #818CF8 60%, #C084FC);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: fadeUp 0.6s 0.2s ease both;
+        }
+        .hero p {
+            font-size: 1.05rem; color: var(--text-muted); margin-bottom: 48px;
+            max-width: 420px; line-height: 1.75; animation: fadeUp 0.6s 0.3s ease both;
+        }
+
+        .start-btn {
+            padding: 15px 48px; font-size: 1rem; font-weight: 600;
+            background: var(--primary); color: white; border: none; border-radius: 50px;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 12px;
+            transition: all 0.3s ease; animation: fadeUp 0.6s 0.4s ease both;
+            position: relative; overflow: hidden;
+        }
+        .start-btn::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+            transform: translateX(-100%); transition: transform 0.5s ease;
+        }
+        .start-btn:hover::before { transform: translateX(100%); }
+        .start-btn:hover {
+            background: var(--primary-hover); transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(67, 97, 238, 0.4);
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: none; }
+        }
+
+        /* ── APP CONTAINER ── */
+        .app-container {
+            width: 100%; height: 100%; max-width: 1160px;
+            display: flex; flex-direction: column;
+            background: var(--bg-panel); border: 1px solid var(--border);
+            opacity: 0; transform: translateY(24px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+            pointer-events: none; position: relative; overflow: hidden;
+        }
+        @media(min-width:768px) {
+            .app-container {
+                height: 92vh; border-radius: 24px;
+                display: grid; grid-template-columns: var(--sidebar-w) 1fr;
+                overflow: hidden;
+                box-shadow: 0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px var(--border), 0 0 60px rgba(67,97,238,0.1);
+            }
+        }
+        .app-container.visible { opacity: 1; transform: none; pointer-events: all; }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            background: var(--bg-sidebar); border-right: 1px solid var(--border);
+            padding: 20px 14px; display: none; flex-direction: column; gap: 20px; overflow-y: auto;
+        }
+        @media(min-width:768px) { .sidebar { display: flex; } }
+        .sidebar::-webkit-scrollbar { width: 3px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 3px; }
+
+        .brand { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 14px; }
+        .brand-icon {
+            width: 38px; height: 38px; border-radius: 11px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex; align-items: center; justify-content: center; font-size: 1rem;
+            flex-shrink: 0; box-shadow: 0 4px 14px rgba(67,97,238,0.4);
+        }
+        .brand-name { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+        .brand-sub { font-size: 0.62rem; color: var(--text-muted); margin-top: 1px; }
+
+        .lang-toggle {
+            display: flex; background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border); border-radius: 50px; padding: 3px; gap: 2px;
+        }
+        .lang-btn {
+            flex: 1; padding: 6px; border-radius: 50px; border: none; cursor: pointer;
+            font-size: 0.75rem; font-weight: 600; font-family: 'Sora', sans-serif;
+            color: var(--text-muted); background: transparent; transition: all 0.2s ease;
+        }
+        .lang-btn.active { background: var(--primary); color: white; box-shadow: 0 2px 8px rgba(67,97,238,0.4); }
+
+        .sidebar-label {
+            font-size: 0.62rem; font-weight: 600; letter-spacing: 0.12em;
+            text-transform: uppercase; color: var(--text-dim); padding: 0 10px;
+        }
+
+        .quick-actions-sidebar { display: flex; flex-direction: column; gap: 2px; }
+
+        .action-btn {
+            background: transparent; border: none; padding: 9px 12px; border-radius: 11px;
+            color: var(--text-muted); text-align: left; cursor: pointer;
+            display: flex; align-items: center; gap: 11px; font-size: 0.8rem;
+            font-family: 'Sora', sans-serif; font-weight: 500; transition: all 0.2s ease; width: 100%;
+        }
+        .action-btn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+
+        .btn-icon {
+            width: 28px; height: 28px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.72rem; flex-shrink: 0; transition: transform 0.2s ease;
+        }
+        .action-btn:hover .btn-icon { transform: scale(1.12); }
+
+        .fir .btn-icon        { background: rgba(239,68,68,0.15);   color: #F87171; }
+        .cyber .btn-icon      { background: rgba(6,182,212,0.15);   color: #22D3EE; }
+        .property .btn-icon   { background: rgba(245,158,11,0.15);  color: #FCD34D; }
+        .divorce .btn-icon    { background: rgba(236,72,153,0.15);  color: #F472B6; }
+        .consumer .btn-icon   { background: rgba(34,197,94,0.15);   color: #4ADE80; }
+        .salary .btn-icon     { background: rgba(168,85,247,0.15);  color: #C084FC; }
+        .land .btn-icon       { background: rgba(251,146,60,0.15);  color: #FB923C; }
+        .rti .btn-icon        { background: rgba(99,102,241,0.15);  color: #818CF8; }
+        .court .btn-icon      { background: rgba(20,184,166,0.15);  color: #2DD4BF; }
+        .police .btn-icon     { background: rgba(239,68,68,0.15);   color: #F87171; }
+
+        .sidebar-footer {
+            margin-top: auto; padding: 12px 14px; border-radius: 12px;
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+            font-size: 0.7rem; color: var(--text-muted); line-height: 1.65;
+        }
+
+        /* ── CHAT AREA ── */
+        .chat-area { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+
+        header {
+            padding: 14px 22px; background: rgba(8,13,26,0.85);
+            border-bottom: 1px solid var(--border); display: flex; align-items: center;
+            gap: 14px; backdrop-filter: blur(12px); flex-shrink: 0;
+        }
+        .bot-avatar-header {
+            width: 40px; height: 40px; border-radius: 11px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex; align-items: center; justify-content: center; font-size: 0.95rem;
+            box-shadow: 0 4px 14px rgba(67,97,238,0.35);
+        }
+        .header-info h2 { font-size: 0.9rem; font-weight: 600; }
+        .status-dot { font-size: 0.7rem; color: #4ADE80; display: flex; align-items: center; gap: 5px; }
+        .status-dot::before {
+            content: ''; width: 6px; height: 6px; border-radius: 50%;
+            background: #4ADE80; display: inline-block; box-shadow: 0 0 6px #4ADE80;
+        }
+
+        .messages-container {
+            flex: 1; overflow-y: auto; padding: 22px;
+            display: flex; flex-direction: column; gap: 18px; scroll-behavior: smooth;
+        }
+        .messages-container::-webkit-scrollbar { width: 4px; }
+        .messages-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 4px; }
+
+        .message-wrapper { display: flex; width: 100%; animation: msgIn 0.35s ease both; }
+        .message-wrapper.user { justify-content: flex-end; }
+        @keyframes msgIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        .avatar {
+            width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; margin-right: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            font-size: 0.8rem; box-shadow: 0 4px 12px rgba(67,97,238,0.3);
+        }
+        .user .avatar { margin-right: 0; margin-left: 12px; background: rgba(255,255,255,0.08); }
+
+        .msg-bubble {
+            max-width: 72%; padding: 14px 18px; font-size: 0.88rem;
+            line-height: 1.7; border-radius: 18px;
+        }
+        .bot .msg-bubble {
+            background: var(--bot-bubble); border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 4px 18px 18px 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+        }
+        .user .msg-bubble {
+            background: linear-gradient(135deg, #4361EE, #7C3AED);
+            border-radius: 18px 4px 18px 18px; box-shadow: 0 4px 20px rgba(67,97,238,0.3);
+        }
+
+        .link-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+        .link-btn {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 7px 14px; border-radius: 50px; font-size: 0.75rem; font-weight: 600;
+            background: rgba(67,97,238,0.15); border: 1px solid rgba(67,97,238,0.35);
+            color: #818CF8; text-decoration: none; cursor: pointer;
+            transition: all 0.2s ease; font-family: 'Sora', sans-serif;
+        }
+        .link-btn:hover {
+            background: rgba(67,97,238,0.3); border-color: rgba(67,97,238,0.6);
+            color: #A5B4FC; transform: translateY(-1px);
+        }
+        .link-btn.police-btn {
+            background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.35); color: #F87171;
+        }
+        .link-btn.police-btn:hover {
+            background: rgba(239,68,68,0.3); border-color: rgba(239,68,68,0.6); color: #FCA5A5;
+        }
+
+        .typing-indicator { display: flex; align-items: center; gap: 5px; padding: 4px 2px; }
+        .typing-indicator span {
+            width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted);
+            animation: bounce 1.2s infinite ease-in-out;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+            40%            { transform: scale(1);   opacity: 1;   }
+        }
+
+        .input-container {
+            padding: 16px 22px; background: rgba(8,13,26,0.9);
+            border-top: 1px solid var(--border); flex-shrink: 0;
+        }
+        .input-wrapper {
+            display: flex; align-items: center; background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
+            padding: 6px 6px 6px 18px; transition: border-color 0.2s ease;
+        }
+        .input-wrapper:focus-within {
+            border-color: rgba(67,97,238,0.5); box-shadow: 0 0 0 3px rgba(67,97,238,0.1);
+        }
+        .input-wrapper input {
+            flex: 1; background: transparent; border: none; color: var(--text);
+            font-size: 0.92rem; font-family: 'Sora', sans-serif; padding: 10px 0; outline: none;
+        }
+        .input-wrapper input::placeholder { color: var(--text-muted); }
+
+        .icon-btn {
+            background: transparent; border: none; color: var(--text-muted);
+            width: 42px; height: 42px; border-radius: 11px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s ease; font-size: 0.9rem;
+        }
+        .icon-btn:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+        .icon-btn.listening { color: #F87171; background: rgba(239,68,68,0.12); animation: pulse 1s infinite; }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0   rgba(239,68,68,0.4); }
+            50%       { box-shadow: 0 0 0 6px rgba(239,68,68,0);   }
+        }
+
+        .send-btn {
+            background: var(--primary); color: white; border: none;
+            width: 44px; height: 44px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; margin-left: 6px; transition: all 0.2s ease; font-size: 0.9rem;
+        }
+        .send-btn:hover {
+            background: var(--primary-hover); transform: scale(1.05);
+            box-shadow: 0 4px 14px rgba(67,97,238,0.4);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HERO -->
+    <div class="hero" id="home">
+        <div class="hero-badge"><i class="fa-solid fa-gavel"></i>&nbsp; AI-Powered Legal Guidance</div>
+        <div class="hero-icon-ring">
+            <div class="hero-icon-inner"><i class="fa-solid fa-scale-balanced"></i></div>
+        </div>
+        <h1>Legal Aid AI</h1>
+        <p>Your intelligent assistant for legal guidance across India. Ask anything — we'll help you understand your rights.</p>
+        <button class="start-btn" id="startBtn">
+            Start Consulting &nbsp;<i class="fa-solid fa-arrow-right"></i>
+        </button>
+    </div>
+
+    <!-- APP -->
+    <div class="app-container" id="app">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+                <div>
+                    <div class="brand-name">Legal Aid AI</div>
+                    <div class="brand-sub">AI-Powered Assistant</div>
+                </div>
+            </div>
+
+            <div class="lang-toggle">
+                <button class="lang-btn active" id="btnEN">English</button>
+                <button class="lang-btn" id="btnHI">हिंदी</button>
+            </div>
+
+            <div class="sidebar-label">Quick Actions</div>
+            <div class="quick-actions-sidebar">
+                <button class="action-btn fir"      id="qa1"><div class="btn-icon"><i class="fa-solid fa-file-pen"></i></div>File an FIR</button>
+                <button class="action-btn cyber"    id="qa2"><div class="btn-icon"><i class="fa-solid fa-shield-halved"></i></div>Cyber Fraud</button>
+                <button class="action-btn property" id="qa3"><div class="btn-icon"><i class="fa-solid fa-house"></i></div>Property Dispute</button>
+                <button class="action-btn divorce"  id="qa4"><div class="btn-icon"><i class="fa-solid fa-heart-crack"></i></div>Divorce Help</button>
+                <button class="action-btn consumer" id="qa5"><div class="btn-icon"><i class="fa-solid fa-receipt"></i></div>Consumer Complaint</button>
+                <button class="action-btn salary"   id="qa6"><div class="btn-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>Salary Issue</button>
+                <button class="action-btn land"     id="qa7"><div class="btn-icon"><i class="fa-solid fa-map"></i></div>Land Dispute</button>
+                <button class="action-btn rti"      id="qa8"><div class="btn-icon"><i class="fa-solid fa-file-circle-question"></i></div>RTI Help</button>
+                <button class="action-btn court"    id="qa9"><div class="btn-icon"><i class="fa-solid fa-gavel"></i></div>Court Case Status</button>
+                <!-- POLICE STATION LOCATOR -->
+                <button class="action-btn police"   id="qaPolice"><div class="btn-icon"><i class="fa-solid fa-location-dot"></i></div>Find Police Station</button>
+            </div>
+
+            <div class="sidebar-footer">
+                ⚠️ General legal information only — not professional legal advice. Always consult a qualified lawyer for your specific situation.
+            </div>
+        </aside>
+
+        <main class="chat-area">
+            <header>
+                <div class="bot-avatar-header"><i class="fa-solid fa-robot"></i></div>
+                <div class="header-info">
+                    <h2>Legal Assistant</h2>
+                    <div class="status-dot">Online &amp; Ready</div>
+                </div>
+            </header>
+
+            <div class="messages-container" id="chat">
+                <div class="message-wrapper bot">
+                    <div class="avatar"><i class="fa-solid fa-robot"></i></div>
+                    <div class="msg-bubble">
+                        👋 Welcome to <strong>Legal Aid AI</strong>! I can help you with FIR filing, cybercrime,
+                        property disputes, RTI, consumer complaints, and much more.<br><br>
+                        Select a topic from the sidebar or type your question below.
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <input type="text" id="userInput" placeholder="Type your legal question..." />
+                    <button class="icon-btn" id="micBtn" title="Voice Input">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                    <button class="send-btn" id="sendBtn">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+    (function () {
+
+        var currentLang = 'en';
+        var isListening = false;
+        var recognition = null;
+
+        /* ── KNOWLEDGE BASE ── */
+        var knowledgeBase = [
+            {
+                keywords: ['fir', 'first information report', 'police complaint', 'register complaint', 'police refusing'],
+                en: '<strong>How to File an FIR in India</strong><br><br>1. Visit your nearest police station.<br>2. Narrate the incident verbally or submit a written complaint.<br>3. The officer MUST register the FIR — refusal is illegal under Section 154 CrPC.<br>4. If police refuse, send complaint by registered post to the Superintendent of Police.<br>5. You can also file a complaint before a Magistrate under Section 156(3) CrPC.<br>6. Get a free copy of the FIR — it is your legal right.<br>7. Note your FIR number for future reference.',
+                hi: '<strong>FIR कैसे दर्ज करें</strong><br><br>1. नजदीकी पुलिस स्टेशन जाएं।<br>2. घटना की जानकारी मौखिक या लिखित रूप में दें।<br>3. पुलिस को FIR दर्ज करना कानूनी रूप से अनिवार्य है।<br>4. यदि पुलिस मना करे, तो SP को रजिस्टर्ड डाक से शिकायत भेजें।<br>5. मजिस्ट्रेट के सामने धारा 156(3) के तहत शिकायत दर्ज करें।<br>6. FIR की मुफ्त प्रति लेना आपका अधिकार है।',
+                links: [
+                    { label: '📍 Find Nearest Police Station', action: 'police_locator' },
+                    { label: '⚖️ NALSA Legal Aid', url: 'https://nalsa.gov.in' },
+                    { label: '🏛️ eCourts Case Status', url: 'https://ecourts.gov.in' }
+                ]
+            },
+            {
+                keywords: ['cyber', 'cybercrime', 'online fraud', 'scam', 'hack', 'phishing', 'upi fraud', 'bank fraud', 'internet crime'],
+                en: '<strong>Cybercrime Reporting Guide</strong><br><br>1. <strong>Call 1930</strong> immediately for financial cyber fraud.<br>2. Visit <strong>cybercrime.gov.in</strong> to file an online complaint.<br>3. Take screenshots, save transaction IDs, and preserve all evidence.<br>4. File a local FIR at the Cyber Crime Cell of your nearest police station.<br>5. Contact your bank immediately to freeze transactions if money was lost.<br>6. Common cybercrimes: UPI fraud, OTP scam, fake job offers, sextortion, social media hacking.',
+                hi: '<strong>साइबर अपराध रिपोर्टिंग गाइड</strong><br><br>1. वित्तीय साइबर धोखाधड़ी के लिए तुरंत <strong>1930</strong> पर कॉल करें।<br>2. ऑनलाइन शिकायत के लिए <strong>cybercrime.gov.in</strong> पर जाएं।<br>3. स्क्रीनशॉट लें और सभी सबूत सुरक्षित रखें।<br>4. नजदीकी पुलिस स्टेशन के साइबर सेल में FIR दर्ज करें।<br>5. यदि पैसे गए हों तो तुरंत बैंक को सूचित करें।',
+                links: [
+                    { label: '🌐 National Cybercrime Portal', url: 'https://cybercrime.gov.in' },
+                    { label: '📞 Helpline: 1930', url: 'tel:1930' },
+                    { label: '🏛️ eCourts', url: 'https://ecourts.gov.in' }
+                ]
+            },
+            {
+                keywords: ['property', 'property dispute', 'property fight', 'possession', 'encroachment', 'property fraud'],
+                en: '<strong>Resolving Property Disputes</strong><br><br>1. Gather all original title documents, sale deeds, and mutation records.<br>2. File a civil suit in the local Civil Court for ownership or possession disputes.<br>3. For encroachment, file an FIR and approach the Revenue Department.<br>4. Apply for interim injunction to stop construction or possession change.<br>5. Lok Adalat and mediation are faster alternatives to court.<br>6. Contact NALSA for free legal aid if you cannot afford a lawyer.',
+                hi: '<strong>संपत्ति विवाद समाधान</strong><br><br>1. मूल दस्तावेज़, बिक्री विलेख और म्यूटेशन रिकॉर्ड एकत्र करें।<br>2. स्थानीय सिविल कोर्ट में मुकदमा दायर करें।<br>3. अतिक्रमण के लिए FIR दर्ज करें और राजस्व विभाग से संपर्क करें।<br>4. लोक अदालत और मध्यस्थता तेज़ विकल्प हैं।<br>5. मुफ्त कानूनी सहायता के लिए NALSA से संपर्क करें।',
+                links: [
+                    { label: '⚖️ NALSA Legal Aid', url: 'https://nalsa.gov.in' },
+                    { label: '🏛️ eCourts Case Status', url: 'https://ecourts.gov.in' },
+                    { label: '📍 Find Nearest Police Station', action: 'police_locator' }
+                ]
+            },
+            {
+                keywords: ['land', 'land registration', 'registry', 'stamp duty', 'sub registrar', 'khata', 'mutation', 'patta'],
+                en: '<strong>Land Registration Process</strong><br><br>1. Verify land records at the state Revenue Department or online Bhoomi portal.<br>2. Get the property valued by a government-approved valuer for stamp duty.<br>3. Pay stamp duty online through your state registration portal.<br>4. Execute the sale deed before the Sub-Registrar with witnesses.<br>5. After registration, apply for mutation (name transfer) in revenue records.<br>6. For disputes, approach the Revenue Divisional Officer (RDO).',
+                hi: '<strong>भूमि पंजीकरण प्रक्रिया</strong><br><br>1. राज्य के भूमि पोर्टल पर रिकॉर्ड सत्यापित करें।<br>2. स्टाम्प ड्यूटी के लिए संपत्ति का मूल्यांकन करवाएं।<br>3. ऑनलाइन स्टाम्प ड्यूटी जमा करें।<br>4. सब-रजिस्ट्रार के सामने बिक्री विलेख निष्पादित करें।<br>5. पंजीकरण के बाद म्यूटेशन के लिए आवेदन करें।',
+                links: [
+                    { label: '🗺️ DILRMP Land Records', url: 'https://dolr.gov.in' },
+                    { label: '⚖️ NALSA Legal Aid', url: 'https://nalsa.gov.in' },
+                    { label: '🏛️ eCourts', url: 'https://ecourts.gov.in' }
+                ]
+            },
+            {
+                keywords: ['tenant', 'landlord', 'rent', 'eviction', 'rental', 'house rent', 'rent agreement', 'deposit'],
+                en: '<strong>Tenant & Landlord Rights</strong><br><br>1. Always have a written rent agreement registered with the Sub-Registrar.<br>2. Landlord cannot cut electricity/water or forcefully evict — it is illegal.<br>3. Tenant can approach Rent Control Court for illegal eviction.<br>4. Security deposit must be returned within 30 days of vacating.<br>5. File a complaint with the local Rent Authority for harassment.<br>6. Document all communication with your landlord in writing.',
+                hi: '<strong>किरायेदार और मकान मालिक के अधिकार</strong><br><br>1. हमेशा पंजीकृत किराया अनुबंध रखें।<br>2. मकान मालिक बिजली/पानी काटना या जबरन निकालना नहीं कर सकता।<br>3. गैरकानूनी बेदखली के लिए किराया नियंत्रण न्यायालय से संपर्क करें।<br>4. सुरक्षा जमा 30 दिनों के भीतर वापस होनी चाहिए।',
+                links: [
+                    { label: '⚖️ NALSA Legal Aid', url: 'https://nalsa.gov.in' },
+                    { label: '🏛️ eCourts Case Status', url: 'https://ecourts.gov.in' }
+                ]
+            },
+            {
+                keywords: ['domestic violence', 'domestic abuse', 'wife beating', 'husband abuse', 'family violence', 'dowry', 'harassment at home'],
+                en: '<strong>Domestic Violence — Immediate Help</strong><br><br>🚨 <strong>Emergency: Call 112 or Women Helpline 181</strong><br><br>1. The Protection of Women from Domestic Violence Act 2005 protects victims.<br>2. File a complaint with the local Protection Officer (PO) — available in every district.<br>3. You can get a Protection Order, Residence Order, or Monetary Relief from the Magistrate.<br>4. File an FIR under Section 498A IPC for cruelty by husband/family.<br>5. Dowry harassment is punishable under Section 498A IPC.',
+                hi: '<strong>घरेलू हिंसा — तत्काल सहायता</strong><br><br>🚨 <strong>आपातकाल: 112 या महिला हेल्पलाइन 181 पर कॉल करें</strong><br><br>1. घरेलू हिंसा अधिनियम 2005 पीड़ितों की रक्षा करता है।<br>2. जिला संरक्षण अधिकारी (PO) से शिकायत करें।<br>3. मजिस्ट्रेट से संरक्षण आदेश प्राप्त करें।<br>4. धारा 498A के तहत FIR दर्ज करें।',
+                links: [
+                    { label: '📞 Women Helpline: 181', url: 'tel:181' },
+                    { label: '🚨 Emergency: 112', url: 'tel:112' },
+                    { label: '⚖️ NALSA Legal Aid', url: 'https://nalsa.gov.in' }
+                ]
+            },
+            {
+                keywords: ['workplace harassment', 'sexual harassment', 'posh', 'office harassment', 'icc', 'internal complaints'],
+                en: '<strong>Workplace Harassment — Your Rights</strong><br><br>1. Sexual harassment at workplace is governed by the POSH Act 2013.<br>2. Every organization with 10+ employees must have an Internal Complaints Committee (ICC).<br>3. File a written complaint to the ICC within 3 months of the incident.<br>4. If no ICC exists, approach the Local Complaints Committee (LCC) at District level.<br>5. You can also file a criminal complaint under IPC Sections 354, 509.<br>6. Employer cannot terminate you for filing a complaint.',
+                hi: '<strong>कार्यस्थल उत्पीड़न — आपके अधिकार</strong><br><br>1. POSH अधिनियम 2013 कार्यस्थल पर यौन उत्पीड़न को नियंत्रित करता है।<br>2. 10+ कर्मचारियों वाले संगठन में ICC होना अनिवार्य है।<br>3. घटना के 3 महीने के भीतर ICC में शिकायत दर्ज करें।<br>4. ICC न हो तो जिला स्तर की LCC से संपर्क करें।',
+                links: [
+                    { label: '⚖️ NALSA Legal Aid', url: 'https://nalsa.gov.in' },
+                    { label: '👩‍⚖️ SHe-Box Portal', url: 'https://shebox.nic.in' },
+                    { label: '🏛️ eCourts', url: 'https://ecourts.gov.in' }
+                ]
+            },
+            {
+                keywords: ['salary not paid', 'salary issue', 'employer not paying', 'wages not paid', 'unpaid salary', 'due salary'],
+                en: '<strong>Salary Not Paid by Employer</strong><br><br>1. Send a legal notice to your employer demanding payment within 7 days.<br>2. File a complaint with the Labour Commissioner or Labour Court in your district.<br>3. Under the Payment of Wages Act, salary must be paid by the 7th or 10th of every month.<br>4. Approach the Labour Superintendent with salary slips, appointment letter, and bank statements.<br>5. For IT/private sector, approach your state Labour Department.',
+                hi: '<strong>नियोक्ता द्वारा वेतन न देने पर</strong><br><br>1. नियोक्ता को 7 दिनों के भीतर भुगतान की कानूनी नोटिस भेजें।<br>2. जिले के श्रम आयुक्त में शिकायत दर्ज करें।<br>3. भुगतान अधिनियम के तहत वेतन हर माह 7 या 10 तारीख तक देना होता है।<br>4. वेतन पर्ची, नियुक्ति पत्र और बैंक स्टेटमेंट साथ रखें।',
+                links: [
+                    { label: '⚒️ Labour Ministry Portal', url: 'https://labour.gov.in' },
+                    { label: '⚖️ NALSA Legal Aid', url: 'https://nalsa.gov.in' },
+                    { label: '🏛️ eCourts', url: 'https://ecourts.gov.in' }
+                ]
+            },
+            {
+                keywords: ['loan harassment', 'recovery agent', 'loan agent', 'debt collection', 'bank harassment', 'loan threat'],
+                en: '<strong>Loan Recovery Harassment</strong><br><br>1. RBI guidelines prohibit abusive or threatening recovery calls.<br>2. File a complaint with the bank Grievance Redressal Officer first.<br>3. If unresolved, approach the Banking Ombudsman (free service by RBI).<br>4. File a police complaint if recovery agents threaten or assault you.<br>5. Agents are NOT allowed to seize property without a court order.<br>6. Call National Consumer Helpline: 1800-11-4000.',
+                hi: '<strong>ऋण वसूली उत्पीड़न</strong><br><br>1. RBI दिशानिर्देश अपमानजनक वसूली कॉल को प्रतिबंधित करते हैं।<br>2. पहले बैंक के शिकायत अधिकारी से संपर्क करें।<br>3. बैंकिंग लोकपाल के पास शिकायत दर्ज करें।<br>4. एजेंट द्वारा धमकी पर FIR दर्ज करें।',
+                links: [
+                    { label: '🏦 RBI Banking Ombudsman', url: 'https://cms.rbi.org.in' },
+                    { label: '📞 Consumer Helpline: 1800-11-4000', url: 'tel:18001144000' },
+                    { label: '🛒 National Consumer Portal', url: 'https://consumerhelpline.gov.in' }
+                ]
+            },
+            {
+                keywords: ['passport', 'passport issue', 'passport delay', 'passport rejected', 'police verification', 'passport seva'],
+                en: '<strong>Passport Problems & Solutions</strong><br><br>1. Apply or track your passport at <strong>passportindia.gov.in</strong>.<br>2. For urgent travel, apply for Tatkaal passport (3–5 working days).<br>3. If police verification is pending, contact your local police station.<br>4. For rejection or delays, raise a grievance on the Passport Seva portal.<br>5. Helpline: <strong>1800-258-1800</strong> (toll-free).<br>6. Documents needed: Aadhaar, Birth Certificate, Address Proof.',
+                hi: '<strong>पासपोर्ट समस्याएं और समाधान</strong><br><br>1. <strong>passportindia.gov.in</strong> पर आवेदन करें या ट्रैक करें।<br>2. तत्काल पासपोर्ट के लिए तत्काल सेवा का उपयोग करें।<br>3. पुलिस सत्यापन लंबित हो तो स्थानीय पुलिस स्टेशन से संपर्क करें।<br>4. हेल्पलाइन: <strong>1800-258-1800</strong>।',
+                links: [
+                    { label: '🛂 Passport Seva Portal', url: 'https://passportindia.gov.in' },
+                    { label: '📞 Helpline: 1800-258-1800', url: 'tel:18002581800' },
+                    { label: '📍 Find PSK Near You', url: 'https://passportindia.gov.in/AppOnlineProject/online/findPSK' }
+                ]
+            },
+            {
+                keywords: ['traffic challan', 'challan', 'traffic fine', 'e-challan', 'traffic violation', 'license seized'],
+                en: '<strong>Traffic Challan & Fine Disputes</strong><br><br>1. Check your e-challan status at <strong>echallan.parivahan.gov.in</strong>.<br>2. Pay challans online to avoid additional penalties.<br>3. To dispute a challan, appear before the traffic magistrate on the date mentioned.<br>4. If wrongly issued, submit evidence (CCTV footage, photos) to the traffic court.<br>5. File a complaint against misbehaving traffic officers with the police commissioner.',
+                hi: '<strong>ट्रैफिक चालान विवाद</strong><br><br>1. <strong>echallan.parivahan.gov.in</strong> पर चालान की स्थिति देखें।<br>2. अतिरिक्त जुर्माने से बचने के लिए ऑनलाइन भुगतान करें।<br>3. गलत चालान के लिए ट्रैफिक मजिस्ट्रेट के सामने उपस्थित हों।',
+                links: [
+                    { label: '🚦 e-Challan Portal', url: 'https://echallan.parivahan.gov.in' },
+                    { label: '🚗 Vahan Portal', url: 'https://vahan.parivahan.gov.in' },
+                    { label: '🏛️ eCourts', url: 'https://ecourts.gov.in' }
+                ]
+            },
+            {
+                keywords: ['rti', 'right to information', 'rti filing', 'government information', 'public information'],
+                en: '<strong>How to File an RTI Application</strong><br><br>1. Any citizen can file RTI to any central or state government department.<br>2. File online at <strong>rtionline.gov.in</strong> for central government departments.<br>3. Fee: ₹10 (central) via postal order, DD, or online. BPL card holders are exempt.<br>4. Response must come within 30 days (48 hours for life/liberty matters).<br>5. If unsatisfied, file First Appeal within 30 days.<br>6. Second Appeal goes to the Central/State Information Commission.',
+                hi: '<strong>RTI आवेदन कैसे करें</strong><br><br>1. कोई भी नागरिक किसी भी सरकारी विभाग में RTI दाखिल कर सकता है।<br>2. <strong>rtionline.gov.in</strong> पर ऑनलाइन आवेदन करें।<br>3. शुल्क: ₹10 (केंद्र सरकार)। BPL धारक मुक्त हैं।<br>4. 30 दिनों के भीतर उत्तर मिलना अनिवार्य है।',
+                links: [
+                    { label: '📄 RTI Online Portal', url: 'https://rtionline.gov.in' },
+                    { label: '📋 CIC Website', url: 'https://cic.gov.in' },
+                    { label: '⚖️ NALSA Legal Aid', url: 'https://nalsa.gov.in' }
+                ]
+            },
+            {
+                keywords: ['insurance', 'insurance claim', 'insurance rejected', 'health insurance', 'car insurance', 'claim denied'],
+                en: '<strong>Insurance Claim Disputes</strong><br><br>1. If your claim is rejected, request a written rejection reason from the insurer.<br>2. File a grievance with the insurer Grievance Redressal Cell within 15 days.<br>3. If unresolved, approach the Insurance Ombudsman (free, covers up to ₹50 lakh).<br>4. File complaint on IRDAI portal at <strong>bimabharosa.irdai.gov.in</strong>.<br>5. You can also file a complaint in Consumer Forum.<br>6. IRDAI helpline: <strong>155255</strong>.',
+                hi: '<strong>बीमा दावा विवाद</strong><br><br>1. दावा अस्वीकार होने पर लिखित कारण मांगें।<br>2. 15 दिनों के भीतर बीमाकर्ता की शिकायत सेल में शिकायत दर्ज करें।<br>3. बीमा लोकपाल से संपर्क करें।<br>4. IRDAI पोर्टल पर शिकायत दर्ज करें।',
+                links: [
+                    { label: '🛡️ IRDAI Bima Bharosa', url: 'https://bimabharosa.irdai.gov.in' },
+                    { label: '📞 IRDAI Helpline: 155255', url: 'tel:155255' },
+                    { label: '🛒 Consumer Helpline', url: 'https://consumerhelpline.gov.in' }
+                ]
+            },
+            {
+                keywords: ['consumer', 'consumer complaint', 'product defect', 'service complaint', 'refund', 'defective product', 'consumer forum'],
+                en: '<strong>Filing a Consumer Complaint</strong><br><br>1. First send a written complaint/notice to the company demanding resolution within 15 days.<br>2. File complaint on <strong>consumerhelpline.gov.in</strong> or call <strong>1800-11-4000</strong>.<br>3. File in Consumer Forum: District Forum (up to ₹1 crore), State Commission, National Commission.<br>4. No court fee for claims up to ₹5 lakh in District Consumer Forum.<br>5. You can file the complaint yourself — no lawyer required.',
+                hi: '<strong>उपभोक्ता शिकायत कैसे दर्ज करें</strong><br><br>1. पहले कंपनी को लिखित शिकायत भेजें।<br>2. <strong>consumerhelpline.gov.in</strong> पर शिकायत दर्ज करें।<br>3. जिला उपभोक्ता फोरम में शिकायत दाखिल करें।<br>4. ₹5 लाख तक के दावों पर कोई कोर्ट फीस नहीं।',
+                links: [
+                    { label: '🛒 National Consumer Helpline', url: 'https://consumerhelpline.gov.in' },
+                    { label: '📞 Helpline: 1800-11-4000', url: 'tel:18001144000' },
+                    { label: '🏛️ NCDRC Portal', url: 'https://ncdrc.nic.in' }
+                ]
+            },
+            {
+                keywords: ['court case', 'case status', 'ecourts', 'hearing date', 'case number', 'check case'],
+                en: '<strong>How to Check Court Case Status</strong><br><br>1. Visit <strong>ecourts.gov.in</strong> to check case status of any district/high court.<br>2. Search by case number, party name, FIR number, or advocate name.<br>3. Download the eCourts mobile app for instant updates and hearing dates.<br>4. For Supreme Court cases, visit <strong>sci.gov.in</strong>.<br>5. SMS: Send ECOURTS [case number] to 9766899899.',
+                hi: '<strong>न्यायालय केस स्थिति कैसे देखें</strong><br><br>1. किसी भी जिला/उच्च न्यायालय की केस स्थिति <strong>ecourts.gov.in</strong> पर देखें।<br>2. केस नंबर, पार्टी नाम, FIR नंबर से खोजें।<br>3. eCourts मोबाइल ऐप डाउनलोड करें।<br>4. सुप्रीम कोर्ट के लिए <strong>sci.gov.in</strong> पर जाएं।',
+                links: [
+                    { label: '🏛️ eCourts Case Status', url: 'https://ecourts.gov.in' },
+                    { label: '⚖️ Supreme Court of India', url: 'https://sci.gov.in' },
+                    { label: '📱 eCourts Services App', url: 'https://play.google.com/store/apps/details?id=in.gov.ecourts.eCourtsServices' }
+                ]
+            },
+            {
+                keywords: ['divorce', 'separation', 'marriage dissolution', 'mutual divorce', 'alimony', 'maintenance', 'child custody'],
+                en: '<strong>Divorce & Separation Guide</strong><br><br>1. <strong>Mutual Consent Divorce</strong>: Both parties agree — takes 6–18 months. File in Family Court.<br>2. <strong>Contested Divorce</strong>: File petition citing grounds (cruelty, desertion, adultery, etc.).<br>3. Wife can claim maintenance under Section 125 CrPC during proceedings.<br>4. Child custody is decided based on the child\'s best interest.<br>5. Mediation is encouraged before going to trial.<br>6. Contact NALSA for free legal aid.',
+                hi: '<strong>तलाक और अलगाव गाइड</strong><br><br>1. <strong>आपसी सहमति तलाक</strong>: दोनों की सहमति — 6-18 महीने लगते हैं।<br>2. <strong>विवादित तलाक</strong>: क्रूरता, परित्याग, व्यभिचार आदि आधार पर।<br>3. पत्नी धारा 125 CrPC के तहत भरण-पोषण का दावा कर सकती है।<br>4. बच्चे की कस्टडी बच्चे के हित में तय होती है।',
+                links: [
+                    { label: '⚖️ NALSA Legal Aid', url: 'https://nalsa.gov.in' },
+                    { label: '🏛️ eCourts Family Court', url: 'https://ecourts.gov.in' },
+                    { label: '📞 Women Helpline: 181', url: 'tel:181' }
+                ]
+            }
+        ];
+
+        /* ── POLICE STATION LOCATOR ── */
+        function openPoliceStationLocator() {
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by your browser. Please enable location access.');
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    var lat = position.coords.latitude;
+                    var lng = position.coords.longitude;
+                    var mapsUrl = 'https://www.google.com/maps/search/police+station/@' + lat + ',' + lng + ',14z';
+                    window.open(mapsUrl, '_blank', 'noopener,noreferrer');
+                },
+                function (error) {
+                    var msg = 'Unable to access your location.';
+                    if (error.code === 1) msg = 'Location permission denied. Please allow location access in your browser settings.';
+                    else if (error.code === 2) msg = 'Location information is unavailable. Please try again.';
+                    else if (error.code === 3) msg = 'Location request timed out. Please try again.';
+                    alert(msg);
+                },
+                { timeout: 10000, enableHighAccuracy: true }
+            );
+        }
+
+        /* ── BUILD LINK BUTTONS ── */
+        function buildLinks(links) {
+            if (!links || links.length === 0) return '';
+            var html = '<div class="link-buttons">';
+            for (var i = 0; i < links.length; i++) {
+                var link = links[i];
+                if (link.action === 'police_locator') {
+                    html += '<button class="link-btn police-btn" onclick="openPoliceStationLocator()">' + link.label + '</button>';
+                } else {
+                    html += '<a class="link-btn" href="' + link.url + '" target="_blank" rel="noopener">' + link.label + '</a>';
+                }
+            }
+            html += '</div>';
+            return html;
+        }
+
+        /* ── GET ANSWER ── */
+        function getAnswer(q) {
+            var query = q.toLowerCase();
+            for (var i = 0; i < knowledgeBase.length; i++) {
+                var item = knowledgeBase[i];
+                for (var j = 0; j < item.keywords.length; j++) {
+                    if (query.indexOf(item.keywords[j]) !== -1) {
+                        var text = currentLang === 'hi' ? item.hi : item.en;
+                        return text + buildLinks(item.links);
+                    }
+                }
+            }
+            var fallback = currentLang === 'hi'
+                ? 'मुझे आपके प्रश्न का सटीक उत्तर नहीं मिला। ये संसाधन आपकी मदद कर सकते हैं:'
+                : 'I could not find a specific answer. Here are some general resources that may help:';
+            return fallback + buildLinks([
+                { label: '⚖️ NALSA Legal Aid', url: 'https://nalsa.gov.in' },
+                { label: '🏛️ eCourts', url: 'https://ecourts.gov.in' },
+                { label: '🛒 Consumer Helpline', url: 'https://consumerhelpline.gov.in' },
+                { label: '📞 Emergency: 112', url: 'tel:112' }
+            ]);
+        }
+
+        /* ── CHAT HELPERS ── */
+        function appendMessage(sender, html) {
+            var chat = document.getElementById('chat');
+            var wrapper = document.createElement('div');
+            wrapper.className = 'message-wrapper ' + sender;
+            if (sender === 'bot') {
+                wrapper.innerHTML = '<div class="avatar"><i class="fa-solid fa-robot"></i></div><div class="msg-bubble">' + html + '</div>';
+            } else {
+                wrapper.innerHTML = '<div class="msg-bubble">' + html + '</div><div class="avatar"><i class="fa-solid fa-user"></i></div>';
+            }
+            chat.appendChild(wrapper);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function showTyping() {
+            var chat = document.getElementById('chat');
+            var el = document.createElement('div');
+            el.className = 'message-wrapper bot'; el.id = 'typing';
+            el.innerHTML = '<div class="avatar"><i class="fa-solid fa-robot"></i></div><div class="msg-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>';
+            chat.appendChild(el);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function hideTyping() {
+            var el = document.getElementById('typing');
+            if (el) el.remove();
+        }
+
+        function handleSend() {
+            var input = document.getElementById('userInput');
+            var text = input.value.trim();
+            if (!text) return;
+            appendMessage('user', text);
+            input.value = '';
+            showTyping();
+            setTimeout(function () { hideTyping(); appendMessage('bot', getAnswer(text)); }, 800);
+        }
+
+        function ask(q) {
+            document.getElementById('userInput').value = q;
+            handleSend();
+        }
+
+        function startApp() {
+            document.getElementById('home').classList.add('hidden');
+            setTimeout(function () { document.getElementById('app').classList.add('visible'); }, 500);
+        }
+
+        function setLang(lang) {
+            currentLang = lang;
+            document.getElementById('btnEN').classList.toggle('active', lang === 'en');
+            document.getElementById('btnHI').classList.toggle('active', lang === 'hi');
+        }
+
+        function toggleVoice() {
+            var btn = document.getElementById('micBtn');
+            if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+                alert('Voice input is not supported in your browser. Please use Google Chrome.');
+                return;
+            }
+            if (isListening) { recognition.stop(); return; }
+            var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SR();
+            recognition.lang = currentLang === 'hi' ? 'hi-IN' : 'en-IN';
+            recognition.interimResults = false; recognition.maxAlternatives = 1;
+            recognition.start();
+            isListening = true;
+            btn.classList.add('listening');
+            btn.innerHTML = '<i class="fa-solid fa-microphone-slash"></i>';
+            recognition.onresult = function (e) { document.getElementById('userInput').value = e.results[0][0].transcript; };
+            recognition.onend = function () { isListening = false; btn.classList.remove('listening'); btn.innerHTML = '<i class="fa-solid fa-microphone"></i>'; };
+            recognition.onerror = function () { isListening = false; btn.classList.remove('listening'); btn.innerHTML = '<i class="fa-solid fa-microphone"></i>'; };
+        }
+
+        /* ── EXPOSE GLOBALLY (for inline onclick) ── */
+        window.openPoliceStationLocator = openPoliceStationLocator;
+
+        /* ── WIRE UP EVENTS ── */
+        document.getElementById('startBtn').addEventListener('click', startApp);
+        document.getElementById('sendBtn').addEventListener('click', handleSend);
+        document.getElementById('micBtn').addEventListener('click', toggleVoice);
+        document.getElementById('btnEN').addEventListener('click', function () { setLang('en'); });
+        document.getElementById('btnHI').addEventListener('click', function () { setLang('hi'); });
+        document.getElementById('userInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); handleSend(); } });
+        document.getElementById('qa1').addEventListener('click', function () { ask('How to file an FIR?'); });
+        document.getElementById('qa2').addEventListener('click', function () { ask('Cybercrime help'); });
+        document.getElementById('qa3').addEventListener('click', function () { ask('Property dispute help'); });
+        document.getElementById('qa4').addEventListener('click', function () { ask('Divorce help'); });
+        document.getElementById('qa5').addEventListener('click', function () { ask('Consumer complaint help'); });
+        document.getElementById('qa6').addEventListener('click', function () { ask('Salary not paid by employer'); });
+        document.getElementById('qa7').addEventListener('click', function () { ask('Land registration problem'); });
+        document.getElementById('qa8').addEventListener('click', function () { ask('How to file RTI?'); });
+        document.getElementById('qa9').addEventListener('click', function () { ask('How to check court case status?'); });
+        document.getElementById('qaPolice').addEventListener('click', openPoliceStationLocator);
+
+    })();
+    </script>
+
+</body>
+</html>
